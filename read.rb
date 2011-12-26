@@ -41,7 +41,10 @@ SETTING_LIST = [['http://alfalfalfa.com/','<div class="main">','<div id="ad2">']
 ['http://jin115.com/archives/','<div class="article_header">','<div id="comment_list">'],
 ['http://umashika-news.jp/archives/','<div class="contents-in">','<div class="article-option" id="comment-form">'],
 ['http://yukkuri.livedoor.biz/archives/','<div class="article-body-more">','<!-- articleBody End -->'],
-['http://lifehack2ch.livedoor.biz/archives/','<div class="posted1p">','<div id="commenttop"></div>']]
+['http://lifehack2ch.livedoor.biz/archives/','<div class="posted1p">','<div id="commenttop"></div>'],
+['http://katuru2ch.blog12.fc2.com/', '<div class="main-entry">', '<ul class="entry-tag">'],
+['http://tundaowata.com/archives/', '<h1 class="entry-title">', '<!-- entry_end -->']
+]
 
 
 def getHtml(src, dst)
@@ -154,12 +157,13 @@ def normalize(src, dst)
 	buf = buf.gsub("&lt;","<")
 	buf = buf.gsub("&gt;",">")
 	buf = buf.gsub("&nbsp;"," ")
+	buf = buf.gsub("&quot;", "\"")
 
 	buf = buf.gsub("<br>","\n")
 	buf = buf.gsub("<br/>","\n")
 	buf = buf.gsub("<br />","\n")
 
-	buf = buf.gsub(/<img [^\/>]*src="?([^ "]+)"?[^\/>]*\/?>/i, '<img src="\1">')
+	buf = buf.gsub(/<img [^\/>]*src[ ]*="?([^ "]+)"?[^\/>]*\/?>/i, '<img src="\1">')
 	buf = buf.gsub(/<a [^\/>]*href="?([^ "]+)"?[^\/>]*\/?>/i, '<a href="\1">')
 #	buf = buf.gsub(/<a [^\/>]*name="?([^ "]+)"?[^\/>]*\/?>/i, '<a name="\1">')
 	buf = buf.gsub(/<a [^>]*(?!href)[^>]*>([^<]+)<\/a>/i, '\1')
@@ -228,12 +232,16 @@ end
 
 #############################
 def wget(src, dst)
-	puts "> " + src
-	f = open(src)
-	w = File.open('img\\' + dst,'wb')
-	w.puts f.read
-	w.close
-	f.close
+	begin
+		puts "> " + src
+		f = open(src)
+		w = File.open('img\\' + dst,'wb')
+		w.puts f.read
+		w.close
+		f.close
+	rescue
+		puts "> failed " + src
+	end
 end
 
 def getImgList()
@@ -341,16 +349,15 @@ def zip(dir, filename)
 end
 
 def img()
-#	list = getImgList
+	list = getImgList
 	FileUtils.mkdir_p("img") unless FileTest.exist?("img")
-#	download(list)
-#	imgconv(ary[1])
-#	open("result_n.txt", "r:utf-8") { |file|
-#		open("img\\筆おろししてもらった女の子に号泣された話をする.txt".encode("sjis"), "wb") { |out|
-#			out.puts file.read
-#		}
-#	}
-	zip("img", "2011-12-11 筆おろししてもらった女の子に号泣された話をする")
+	download(list)
+	imgconv("世界ふしぎ発見がエロすぎる")
+#	zip("img", "2011-12-11 xxx")
+end
+
+def zip_compress()
+	zip("img", "2011-12-25 世界ふしぎ発見がエロすぎる")
 end
 #############################
 
@@ -362,6 +369,8 @@ elsif ARGV.size() == 1
   puts ARGV[0]
   if ARGV[0] == "i"
     img()
+  elsif ARGV[0] == "z"
+    zip_compress()
   else
     puts "Invalid args."
   end
