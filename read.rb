@@ -43,7 +43,9 @@ SETTING_LIST = [['http://alfalfalfa.com/','<div class="main">','<div id="ad2">']
 ['http://yukkuri.livedoor.biz/archives/','<div class="article-body-more">','<!-- articleBody End -->'],
 ['http://lifehack2ch.livedoor.biz/archives/','<div class="posted1p">','<div id="commenttop"></div>'],
 ['http://katuru2ch.blog12.fc2.com/', '<div class="main-entry">', '<ul class="entry-tag">'],
-['http://tundaowata.com/archives/', '<h1 class="entry-title">', '<!-- entry_end -->']
+['http://tundaowata.com/archives/', '<h1 class="entry-title">', '<!-- entry_end -->'],
+['http://rajic.ldblog.jp/archives/', '<div class="article-date-category-outer">', '<h4>関連記事</h4>'],
+['http://vip0nanzo.blog109.fc2.com/', '<h2 class="ently_title">', '<!--▲ エントリー（記事）▲-->']
 ]
 
 
@@ -127,8 +129,13 @@ def normalize(src, dst)
 	buf = buf.gsub(/<script((?!<\/script>).)*<\/script>/, "")
 	buf = buf.gsub(/<noscript((?!<\/noscript>).)*<\/noscript>/, "")
 
+	buf = buf.gsub(/onMouseover="[^"]+"/, "")
+
 	buf = buf.gsub(/<h2[^>]*>/, "")
 	buf = buf.gsub("</h2>", "")
+
+	buf = buf.gsub("<strong>", "")
+	buf = buf.gsub("</strong>", "")
 
 	buf = buf.gsub(/<div[^>]*>/i, "")
 	buf = buf.gsub(/<\/div>/i, "")
@@ -166,8 +173,10 @@ def normalize(src, dst)
 	buf = buf.gsub(/<img [^\/>]*src[ ]*="?([^ "]+)"?[^\/>]*\/?>/i, '<img src="\1">')
 	buf = buf.gsub(/<a [^\/>]*href="?([^ "]+)"?[^\/>]*\/?>/i, '<a href="\1">')
 #	buf = buf.gsub(/<a [^\/>]*name="?([^ "]+)"?[^\/>]*\/?>/i, '<a name="\1">')
-	buf = buf.gsub(/<a [^>]*(?!href)[^>]*>([^<]+)<\/a>/i, '\1')
+#	buf = buf.gsub(/<a [^>]*(?!href)[^>]*>([^<]+)<\/a>/i, '\1')
 	buf = buf.gsub("</A>", "</a>")
+	buf = buf.gsub(/<a href="(http[^\"]+(.jpg|.png|.gif))">[ \n\t]*<img[^>]+>[ \n\t]*<\/a>/, '<img src="\1">')
+	buf = buf.gsub(/<a href="[^"]+"><\/a>/, '')
 
 	buf = buf.gsub("&#9833;", "♩")
 	buf = buf.gsub("&hellip;", "…")
@@ -240,7 +249,11 @@ def wget(src, dst)
 		w.close
 		f.close
 	rescue
-		puts "> failed " + src
+		if dst.nil? or src.nil?
+			puts "src or dst is nil"
+		elsif
+			puts "> failed " + dst + ":" + src
+		end
 	end
 end
 
@@ -261,6 +274,37 @@ def getImgList()
 	return r
 end
 
+def getImgHash()
+	f = open("result_n.txt", "r:utf-8")
+	buf = f.read
+	f.close
+
+	i = 1
+	r = {}
+	list = buf.scan(/<img src="(http[^\"]+(.jpg|.png|.gif))">(?!<\/a>)/)
+	list.each { |a|
+		if not r.key? a[0]
+			idx = a[0].rindex "/"
+			if not idx.nil?
+				name = a[0][idx + 1, a[0].size]
+				r[a[0]] = i.to_s + "_" + name
+				i = i + 1
+			end
+		end
+	}
+	puts r
+	list = buf.scan(/<a href="(http[^\"]+(.jpg|.png|.gif))"><img/)
+	list.each { |a|
+		if not r.key? a[0]
+			idx = a[0].rindex "/"
+			name = a[0][idx + 1, a[0].size]
+			r[a[0]] = i.to_s + "_" + name
+			i = i + 1
+		end
+	}
+	return r
+end
+
 def imgconv(filename)
 	f = open("result_n.txt", "r:utf-8")
 	buf = f.read
@@ -275,6 +319,21 @@ def imgconv(filename)
 	if regex =~ buf then
 		buf = buf.gsub(regex, '<img src="\1">')
 	end
+
+	f = open('img\\' + filename + ".txt", "w")
+	f.puts buf
+	f.close
+end
+
+def imgconv_by_dic(filename, dic)
+	f = open("result_n.txt", "r:utf-8")
+	buf = f.read
+	f.close()
+
+	dic.each_key { |key|
+		val = dic[key]
+		buf = buf.gsub('<img src="' + key + '">', '<img src="' + val + '">')
+	}
 
 	f = open('img\\' + filename + ".txt", "w")
 	f.puts buf
@@ -332,6 +391,51 @@ def download(list)
 	puts "end."
 end
 
+def download_by_dic(dic)
+	list1 = {}
+	list2 = {}
+	list3 = {}
+	counter = 0
+	dic.each_key { |url|
+		if counter %3 == 0 then
+			list1[url] = dic[url]
+		elsif counter % 3 == 1 then
+			list2[url] = dic[url]
+		else
+			list3[url] = dic[url]
+		end
+		counter += 1
+		if counter == 3 then
+			counter == 0
+		end
+	}
+
+
+	t1 = Thread.new(list1) do |list|
+		list.each_key { |item|
+			wget(item, list[item])
+		}
+	end
+
+	t2 = Thread.new(list2) do |list|
+		list.each_key { |item|
+			wget(item, list[item])
+		}
+	end
+
+	t3 = Thread.new(list3) do |list|
+		list.each_key { |item|
+			wget(item, list[item])
+		}
+	end
+
+	t1.join
+	t2.join
+	t3.join
+
+	puts "end."
+end
+
 def zip(dir, filename)
 	fileName = filename + '.zip'
 	files = Dir.entries(dir).reject! do |file|
@@ -348,16 +452,16 @@ def zip(dir, filename)
 #	end
 end
 
-def img()
-	list = getImgList
+def img(title)
+	dic = getImgHash
+	puts dic
 	FileUtils.mkdir_p("img") unless FileTest.exist?("img")
-	download(list)
-	imgconv("世界ふしぎ発見がエロすぎる")
-#	zip("img", "2011-12-11 xxx")
+	download_by_dic(dic)
+	imgconv_by_dic(title, dic)
 end
 
-def zip_compress()
-	zip("img", "2011-12-25 世界ふしぎ発見がエロすぎる")
+def zip_compress(date, title)
+	zip("img", date + " " + title)
 end
 #############################
 
@@ -366,11 +470,28 @@ puts ARGV.size()
 if ARGV.size() == 0
   readText()
 elsif ARGV.size() == 1
-  puts ARGV[0]
+  title = ""
+  date = ""
+    File.open("read.txt", "r:utf-8") do |frp|
+      lines = frp.readlines
+      lines.each { |line|
+        l = line.chomp
+        items = l.split(',')
+        if items.size() == 2 then
+          date = Time.now.strftime("%Y-%m-%d")
+          title = items[1]
+        elsif items.size() == 3 then
+          title = items[1]
+          date = items[2]
+        else
+          puts "ファイルが不正です。".encode("sjis")
+        end
+      }
+    end
   if ARGV[0] == "i"
-    img()
+    img(title)
   elsif ARGV[0] == "z"
-    zip_compress()
+    zip_compress(date, title)
   else
     puts "Invalid args."
   end
