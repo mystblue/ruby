@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-def test()
-  return "test"
-end
+require 'rubygems'
+require 'zip/zipfilesystem'
 
 def compare(str1, str2)
   # 最小の長さを取得
@@ -62,3 +61,39 @@ end
 def sort(ary)
   return ary.sort { |s1, s2| compare(s1, s2)}
 end
+
+def zip(dir)
+  fileName = dir + '.zip'
+  files = Dir.entries(dir).reject! do |file|
+    file == "." or file == ".."
+  end
+  
+  if File.exist? fileName
+    File.delete fileName
+  end
+  files = sort(files)
+  i = 1
+  Zip::ZipFile.open(fileName, Zip::ZipFile::CREATE) do |ar|
+    files.each { |file|
+      puts dir + '/' + file
+      idx = file.rindex "."
+      ext = file[idx..file.size]
+      ar.add("%04d" % i + ext, dir.encode + '/' + file)
+      i = i + 1
+    }
+  end
+end
+
+def main()
+  files = Dir.entries(".").reject! { |f|
+    f == "." or f == ".."
+  }
+  files.each { |d|
+    if File::ftype(d) == "directory"
+      puts d
+      zip(d)
+    end
+  }
+end
+
+main()

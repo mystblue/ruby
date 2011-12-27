@@ -11,10 +11,6 @@ class TC_zip_compress < Test::Unit::TestCase
   # def teardown
   # end
 
-  def test_test
-    assert_equal("test", test)
-  end
-
   def test_compare1
     assert_equal(0, compare("a", "a"))
     assert_equal(1, compare("b", "a"))
