@@ -122,6 +122,9 @@ def normalize(src, dst)
 	buf = f.read
 	f.close
 	
+	buf = buf.gsub(/<img\n[^\/>]*src[ ]*="?([^ "]+)"?[^\/>]*\/?>/im, '<img src="\1">')
+	buf = buf.gsub(/<a\n[^\/>]*href="?([^ "]+)"?[^\/>]*\/?>/im, '<a href="\1">')
+
 	buf = buf.gsub(/\n/m, "")
 	buf = buf.gsub("\r", "")
 
@@ -129,7 +132,7 @@ def normalize(src, dst)
 	buf = buf.gsub(/<script((?!<\/script>).)*<\/script>/, "")
 	buf = buf.gsub(/<noscript((?!<\/noscript>).)*<\/noscript>/, "")
 
-	buf = buf.gsub(/onMouseover="[^"]+"/, "")
+	buf = buf.gsub(/onMouseover="[^"]+"/im, "")
 
 	buf = buf.gsub(/<h2[^>]*>/, "")
 	buf = buf.gsub("</h2>", "")
@@ -146,7 +149,9 @@ def normalize(src, dst)
 	buf = buf.gsub(/<b[^>r][^>]*>/, "")
 	buf = buf.gsub("<b>", "")
 	buf = buf.gsub("</b>", "")
+	buf = buf.gsub("</blockquote>", "")
 	buf = buf.gsub(/<p[^>a][^>]*>/, "")
+	buf = buf.gsub("<p>", "")
 	buf = buf.gsub("</p>", "")
 	buf = buf.gsub(/<u[^>]*>/, "")
 	buf = buf.gsub("</u>", "")
@@ -169,13 +174,18 @@ def normalize(src, dst)
 	buf = buf.gsub("<br>","\n")
 	buf = buf.gsub("<br/>","\n")
 	buf = buf.gsub("<br />","\n")
+	buf = buf.gsub(/<br[^>]+>/m,"\n")
 
-	buf = buf.gsub(/<img [^\/>]*src[ ]*="?([^ "]+)"?[^\/>]*\/?>/i, '<img src="\1">')
-	buf = buf.gsub(/<a [^\/>]*href="?([^ "]+)"?[^\/>]*\/?>/i, '<a href="\1">')
+	buf = buf.gsub("<imgsrc", "<img src")
+
+	buf = buf.gsub(/<img [^\/>]*src[ ]*="?([^ "]+)"?[^\/>]*\/?>/im, '<img src="\1">')
+	buf = buf.gsub(/<a [^\/>]*href="?([^ "]+)"?[^\/>]*\/?>/im, '<a href="\1">')
 #	buf = buf.gsub(/<a [^\/>]*name="?([^ "]+)"?[^\/>]*\/?>/i, '<a name="\1">')
 #	buf = buf.gsub(/<a [^>]*(?!href)[^>]*>([^<]+)<\/a>/i, '\1')
 	buf = buf.gsub("</A>", "</a>")
 	buf = buf.gsub(/<a href="(http[^\"]+(.jpg|.png|.gif))">[ \n\t]*<img[^>]+>[ \n\t]*<\/a>/, '<img src="\1">')
+	buf = buf.gsub(/<a href="(http[^\"]+(.jpg|.png|.gif))">[ \n\t]*[^<>]+[ \n\t]*<\/a>/, '<img src="\1">')
+
 	buf = buf.gsub(/<a href="[^"]+"><\/a>/, '')
 
 	buf = buf.gsub("&#9833;", "♩")
@@ -188,6 +198,8 @@ def normalize(src, dst)
 	buf = buf.gsub(/\t+\n/,"")
 
 	buf = buf.gsub(/\n{2,}/m, "\r\n\r\n")
+
+	buf = buf.gsub(/^(http[^\"]+(.jpg|.png|.gif))[ ]*/, '<img src="\1">')
 
 	return buf
 end
@@ -292,7 +304,6 @@ def getImgHash()
 			end
 		end
 	}
-	puts r
 	list = buf.scan(/<a href="(http[^\"]+(.jpg|.png|.gif))"><img/)
 	list.each { |a|
 		if not r.key? a[0]
@@ -492,6 +503,11 @@ elsif ARGV.size() == 1
     img(title)
   elsif ARGV[0] == "z"
     zip_compress(date, title)
+  elsif ARGV[0] == "n"
+    buf = normalize("result.txt", "result_n.txt")
+    open("n.txt", "wb") { |f|
+      f.puts buf
+    }
   else
     puts "Invalid args."
   end
