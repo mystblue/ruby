@@ -20,7 +20,7 @@ SETTING_LIST = [['http://alfalfalfa.com/','<div class="main">','<div id="ad2">']
 ['http://vippers.jp/','<div id="article">','<div id="oneText">'],
 ['http://nantuka.blog119.fc2.com/','<!--▼ エントリー（記事）▼-->','<div class="bottom_navi">'],
 ['http://blog.esuteru.com/','<div id="entry">','<div class="clearfix">'],
-['http://news4vip.livedoor.biz/','<div class="ently_navi_top">','<div class="related-articles">'],
+['http://news4vip.livedoor.biz/','<div class="ently_navi_top">','<div class="article-footer">'],
 ['http://blog.livedoor.jp/news23vip/','<div class="article-outer hentry">','<div class="article-footer">'],
 ['http://neetetsu.com/','<div class="article-outer hentry">','<a name="comment-form"></a>'],
 ['http://nanntokasokuhou.blog.fc2.com/','<!--▼ エントリー（記事）▼-->','<!--▲ エントリー（記事）▲-->'],
@@ -45,7 +45,12 @@ SETTING_LIST = [['http://alfalfalfa.com/','<div class="main">','<div id="ad2">']
 ['http://katuru2ch.blog12.fc2.com/', '<div class="main-entry">', '<ul class="entry-tag">'],
 ['http://tundaowata.com/archives/', '<h1 class="entry-title">', '<!-- entry_end -->'],
 ['http://rajic.ldblog.jp/archives/', '<div class="article-date-category-outer">', '<h4>関連記事</h4>'],
-['http://vip0nanzo.blog109.fc2.com/', '<h2 class="ently_title">', '<!--▲ エントリー（記事）▲-->']
+['http://vip0nanzo.blog109.fc2.com/', '<h2 class="ently_title">', '<!--▲ エントリー（記事）▲-->'],
+['http://blog.livedoor.jp/seiyufan/archives/','<div class="article-body entry-content">','<div id="article-options">'],
+['http://rabitsokuhou.2chblog.jp/archives/','<div class="entry">','<div id="article-options">'],
+['http://vipsister23.com/archives/','<h2 class="article-title entry-title">','<div id="rewrite-list" class="inline-block">'],
+['http://sakusakumirai.blog.fc2.com/','<div class="title_entry">','<div id="comment">'],
+['http://blog.livedoor.jp/chihhylove/archives/','<div id="articlebody">','<div id="commenttop">']
 ]
 
 
@@ -188,7 +193,7 @@ def normalize(src, dst)
 
 	buf = buf.gsub(/<a href="[^"]+"><\/a>/, '')
 
-	buf = buf.gsub("&#9833;", "♩")
+	buf = buf.gsub("&#9833;", "?")
 	buf = buf.gsub("&hellip;", "…")
 
 	buf = buf.gsub(/^\t+/,"")
